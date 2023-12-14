@@ -1,0 +1,121 @@
+---
+title: "Analisis LQSA"
+author: "Equipo 2"
+format: html
+editor: visual
+---
+
+```{r echo=FALSE}
+df <- read.csv("C:\\Users\\Piroblaster9\\Desktop\\Práctica 0 - SAA - Hoja 1.csv")
+print(df)
+
+library(ggplot2)
+
+ggplot(df, aes(x=Poder)) +
+  geom_histogram(bins = 30)
+
+ggplot(df, aes(x=Convivencia)) +
+  geom_histogram(bins = 30)
+
+ggplot(df, aes(x=Liante)) +
+  geom_histogram(bins = 30)
+
+ggplot(df, aes(x=Atractivo)) +
+  geom_histogram(bins = 30)
+
+ggplot(df, aes(x=Locura)) +
+  geom_histogram(bins = 30)
+
+print("Medias")
+
+media <- mean(df$Poder)
+print(media)
+media2 <- mean(df$Convivencia)
+print(media2)
+media3 <- mean(df$Liante)
+print(media3)
+media4 <- mean(df$Atractivo)
+print(media4)
+media5 <- mean(df$Locura)
+print(media5)
+
+print("Medianas")
+
+mediana <- median(df$Poder)
+mediana
+mediana2 <- median(df$Convivencia)
+mediana2
+mediana3 <- median(df$Liante)
+mediana3
+mediana4 <- median(df$Atractivo)
+mediana4
+mediana5 <- median(df$Locura)
+mediana5
+
+print("Moda")
+
+tabla_frecuencias <- table(df$Poder)
+moda <- as.numeric(names(tabla_frecuencias)[which.max(tabla_frecuencias)])
+moda
+
+tabla_frecuencias <- table(df$Convivencia)
+moda <- as.numeric(names(tabla_frecuencias)[which.max(tabla_frecuencias)])
+moda
+
+tabla_frecuencias <- table(df$Liante)
+moda <- as.numeric(names(tabla_frecuencias)[which.max(tabla_frecuencias)])
+moda
+
+tabla_frecuencias <- table(df$Atractivo)
+moda <- as.numeric(names(tabla_frecuencias)[which.max(tabla_frecuencias)])
+moda
+
+tabla_frecuencias <- table(df$Locura)
+moda <- as.numeric(names(tabla_frecuencias)[which.max(tabla_frecuencias)])
+moda
+
+tabla_frecuencias <- table(df$Grupo_edad)
+moda <- names(tabla_frecuencias)[which.max(tabla_frecuencias)]
+moda
+
+tabla_frecuencias <- table(df$Sexo)
+moda <- names(tabla_frecuencias)[which.max(tabla_frecuencias)]
+moda
+
+tabla_frecuencias_edad <- table(df$Grupo_edad)
+pie(tabla_frecuencias_edad, main = "Distribución de Edad")
+
+tabla_frecuencias_sexo <- table(df$Sexo)
+pie(tabla_frecuencias_sexo, main = "Distribución de Sexo")
+
+print("Varianzas")
+
+varianza_R <- var(df$Poder)
+varianza_R
+
+varianza_R <- var(df$Convivencia)
+varianza_R
+
+varianza_R <- var(df$Liante)
+varianza_R
+
+varianza_R <- var(df$Atractivo)
+varianza_R
+
+varianza_R <- var(df$Locura)
+varianza_R
+
+print("La varianza más grande es la de Liante")
+
+print("Rango")
+
+range(df$Poder)
+range(df$Convivencia)
+range(df$Liante)
+range(df$Atractivo)
+range(df$Locura)
+
+print("IQR")
+
+
+```

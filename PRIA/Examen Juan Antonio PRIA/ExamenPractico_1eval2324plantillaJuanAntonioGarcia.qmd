@@ -1,0 +1,439 @@
+---
+title: "Exámen práctico PRIA"
+author: "Juan Antonio Garcia Martinez"
+format: html
+editor: visual
+date: "2023-12-05"
+toc: true
+toc-depth: 2
+---
+
+```{r warning=FALSE, message=FALSE}
+## Librerías
+library(tidyverse)
+# library(broom)
+
+```
+
+# 1. Football-data: Datawrangling básico
+
+En esta sección se realizarán tareas de descarga y lectura de datos, manipulación básica, selección de variables, conversiones de tipos, y exploración de la estructura de datos.
+
+urls: https://raw.githubusercontent.com/jesusturpin/curintel2324/main/data/SP1.csv https://raw.githubusercontent.com/jesusturpin/curintel2324/main/data/SP2.csv
+
+# 1.1 Descargando datos externos
+
+Descarga los resultados de los partidos de fútbol de 1º y 2º división españolas y guárdalos en las variables SP1 y SP2 respectivamente.
+
+```{r}
+
+url_SP1 <- "https://raw.githubusercontent.com/jesusturpin/curintel2324/main/data/SP1.csv"
+url_SP2 <- "https://raw.githubusercontent.com/jesusturpin/curintel2324/main/data/SP2.csv"
+
+SP1 <- read_csv(url_SP1)
+SP2 <- read_csv(url_SP2)
+
+print(SP1)
+print(SP2)
+```
+
+## 1.2 Selección de datos **(0.1 Pts)**
+
+Para ambos dataframes, selecciona las columnas Div, Date, HomeTeam, AwayTeam, FTHG, FTAG, PSCH, PSCA, que se corresponden con:
+
+-   Div: Liga
+
+-   Date: Fecha
+
+-   HomeTeam: Local
+
+-   AwayTeam: Visitante
+
+-   FTHG: Marcador Local
+
+-   FTAG: Marcador Visitante
+
+-   FTR: Resultado: "H" (Victoria Local), "D" (Empate), "A"(Victoria Visitante)
+
+-   PSCH: Cotización/cuota de la victoria equipo local justo al comienzo del encuentro (casa PS).
+
+-   PSCD: Cotización/cuota del empate justo al comienzo del encuentro (casa PS).
+
+-   PSCA: Cotización/cuota de la victoria visitante justo al comienzo del encuentro (casa PS).
+
+**Aclaración**: La cotización o cuota se corresponde con el multiplicador o cantidad bruta que se pagaría sobre una apuesta acertada. Por ejemplo, si la victoria local tiene valor PSCH = 2.4, un apostante que haya pronosticado y acertado ese resultado, recibiría 2.4 € por cada euro apostado. Si apostó 10 €, recibiría 24 €, si su inversión fue 10 €, su ganancia neta serían 14.
+
+```{r}
+SP1_1.1 <- SP1 %>%
+  select(Div, Date, HomeTeam, AwayTeam, FTHG, FTAG, PSCH, PSCD, PSCA) %>%
+  mutate(FTR = ifelse(FTHG > FTAG, "H", ifelse(FTHG < FTAG, "A", "D")))
+
+SP2_1.2 <- SP2 %>%
+  select(Div, Date, HomeTeam, AwayTeam, FTHG, FTAG, PSCH, PSCD, PSCA) %>%
+  mutate(FTR = ifelse(FTHG > FTAG, "H", ifelse(FTHG < FTAG, "A", "D")))
+
+print(SP1_1.1)
+print(SP2_1.2)
+```
+
+```{r}
+# ("SP1_1.2.csv")
+# ("SP2_1.2.csv")
+```
+
+## 1.3 Unión por filas **(0.25 Pts)**
+
+Une por filas ambos dataframes y guárdalos en la variable SP_1.3
+
+```{r}
+SP_1.3 <- bind_rows(SP1_1.1, SP2_1.2)
+
+print(SP_1.3)
+```
+
+```{r}
+# ("SP_1.3.csv")
+```
+
+## 1.4 Estructura resultante **(0.1 Pts)**
+
+Muestra la estructura del dataframe SP_1.3 e indica:
+
+-   Número de filas:
+-   Número de columnas:
+
+```{r}
+str(SP_1.3)
+
+n_filas_SP_1.3 <- nrow(SP_1.3)
+n_columnas_SP_1.3 <- ncol(SP_1.3)
+
+cat("Nº de filas:", n_filas_SP_1.3, "\n")
+cat("Nº de columnas:", n_columnas_SP_1.3, "\n")
+
+```
+
+## 1.5 Paquetes y librerías **(0.25 Pts)**
+
+Instala el paquete *skimr*, carga la librería y utiliza la función `skim` sobre el dataframe SP_1.3. ¿Hay alguna variable con huecos o valores perdidos (NULL, NA, espacios, etc.)?
+
+```{r }
+
+install.packages("skimr")
+
+library(skimr)
+
+resultado <- skim(SP_1.3)
+
+print(resultado)
+
+```
+
+## 1.6 Tipos de datos y conversiones **(0.5 Pts)**
+
+De las variables anteriores, indica cuáles son de los siguientes tipos:
+
+-   Numéricas discretas:
+
+-   Numéricas contínuas:
+
+-   Categóricas nominales:
+
+-   Categóricas ordinales:
+
+Convierte el tipo de la variable Date a tipo fecha (`Date`) . Convierte a factor el resto de variables categóricas. Una de ellas es ordinal, por lo que no debes olvidar asignar los niveles.
+
+Guarda el dataframe resultante en la variable SP_1.6
+
+```{r }
+library(dplyr)
+library(skimr)
+
+SP_1.6 <- SP_1.3 %>%
+  mutate(
+    Date = as.Date(Date, format = "%d/%m/%Y"),
+    Div = as.factor(Div),
+    HomeTeam = as.factor(HomeTeam),
+    AwayTeam = as.factor(AwayTeam),
+    FTR = as.factor(FTR)
+  )
+
+SP_1.6$Div <- factor(SP_1.6$Div, levels = c("SP1", "SP2"))
+
+resultados <- skim(SP_1.6)
+
+print(resultados)
+
+```
+
+Ahora aplica la función resumen, e indica:
+
+-   Nº partidos de 1ª:
+-   Nº partidos de 2ª:
+-   Fecha 1º partido:
+-   Fecha último partido:
+-   Máximo nº de goles:
+-   Cuota más alta: ¿a qué resultado: H, D ó A?
+
+```{r}
+# ("SP_1.6.csv")
+```
+
+```{r }
+n_partidos_SP1 <- sum(SP_1.6$Div == "SP1")
+n_partidos_SP2 <- sum(SP_1.6$Div == "SP2")
+fecha_primero <- min(SP_1.6$Date)
+fecha_ultimo <- max(SP_1.6$Date)
+max_goles <- max(SP_1.6$FTHG, SP_1.6$FTAG)
+
+cuota_mas_alta <- max(SP_1.6$PSCH, SP_1.6$PSCD, SP_1.6$PSCA)
+res_cuota_mas_alta <- ifelse(SP_1.6$PSCH == cuota_mas_alta, "H",
+                                    ifelse(SP_1.6$PSCD == cuota_mas_alta, "D", "A"))
+
+cat("Nº partidos de 1ª:", n_partidos_SP1, "\n")
+cat("Nº partidos de 2ª:", n_partidos_SP2, "\n")
+cat("Fecha 1º partido:", fecha_primero, "\n")
+cat("Fecha último partido:", fecha_ultimo, "\n")
+cat("Máx nº de goles:", max_goles, "\n")
+cat("Cuota más alta: ", cuota_mas_alta, " (Resultado:", res_cuota_mas_alta, ")\n")
+
+```
+
+# 2. Football-data: Datawrangling avanzado
+
+En esta sección, se crearán variables y métricas nuevas a partir de los datos originales.
+
+## 2.1 Retorno y comisión **(0.25 Pts)**
+
+El retorno indica la proporción de premios que la sala retorna sobre lo recaudado al conjunto de sus apostantes en un punto de equilibrio para un partido y unas cotizaciones al local, empate y visitante registradas en las columnas PSCH, PSCD y PSCA respectivamente. El valor lógicamente será un número entre 0 y 1, pues si es superior a 1, ¡la banca pierde! y como te imaginarás, eso no ocurre.
+
+La fórmula del retorno para cotizaciones en formato decimal, como vienen en *football-data* es:
+
+$$Ret = \frac{1}{{\frac{1}{PSCH} + \frac{1}{PSCD} + \frac{1}{PSCA}}}$$
+
+Si el retorno es la proporción que reparte de lo recaudado por evento, la comisión promedio que gana la sala es:
+
+$$Fee = 1 - Ret$$ Crea las columnas *Ret* y *Fee* según las fórmulas descritas. Guarda el resultado en *SP_2.1*
+
+```{r }
+library(dplyr)
+
+SP_2.1 <- SP_1.6 %>%
+  mutate(Ret = 1 / ((1 / PSCH) + (1 / PSCD) + (1 / PSCA)),
+         Fee = 1 - Ret)
+
+
+
+```
+
+## 2.2 Cuotas ajustadas **(0.5 Pts)**
+
+Ahora crea 3 nuevas columnas *PSCH_adj*, *PSCD_adj* y *PSCA_adj cuyo* que son las cuotas ajustadas, es decir, las cuotas originales ofrecidas por una determinada sala de apuestas si eliminamos comisiones implícitas. Si en esas cuotas calculásemos *Fee* y *Ret*, los resultados serían 0 y 1 respectivamente. Puedes verificar si lo has hecho bien si calculas Ret y obtienes siempre 1. Guarda el dataframe resultante en SP_2.2.
+
+Sus fórmulas son:
+
+-   $PSCH_{\text{adj}} = PSCH \left( \frac{1}{PSCH} + \frac{1}{PSCD} + \frac{1}{PSCA} \right)$
+-   $PSCD_{\text{adj}} = PSCD \left( \frac{1}{PSCH} + \frac{1}{PSCD} + \frac{1}{PSCA} \right)$
+-   $PSCA_{\text{adj}} = PSCA \left( \frac{1}{PSCH} + \frac{1}{PSCD} + \frac{1}{PSCA} \right)$
+
+Para no repetir cálculos, vamos a definir la variable probabilidades implícitas totales *Total_prob_imp*:
+
+$Total\_prob\_imp = \frac{1}{PSCH} + \frac{1}{PSCD} + \frac{1}{PSCA}$
+
+De este modo, las fórmulas quedarían:
+
+-   $PSCH_{\text{adj}} = Total\_prob\_imp \cdot PSCH$
+-   $PSCD_{\text{adj}} = Total\_prob\_imp \cdot PSCD$
+-   $PSCA_{\text{adj}} = Total\_prob\_imp \cdot PSCA$
+
+Elimina la variable *Total_prob_imp* si las has creado.
+
+```{r }
+SP_2.2 <- SP_2.1 %>%
+  mutate(PSCH_adj = PSCH / (1 - Fee),
+         PSCD_adj = PSCD / (1 - Fee),
+         PSCA_adj = PSCA / (1 - Fee))
+
+  
+```
+
+## 2.3 Probabilidades estimadas por la casa de apuestas **(0.25 Pts)**
+
+Una vez calculadas las cuotas ajustadas sin margen, calcular las probabilidades es tan simple como calcular la inversa de la cuota de cada posible evento:
+
+-   $P_H = \frac{1}{PSCH_{\text{adj}}}$
+-   $P_D = \frac{1}{PSCD_{\text{adj}}}$
+-   $P_A = \frac{1}{PSCA_{\text{adj}}}$
+
+Añade 3 nuevas columnas llamadas PH, PD y PA que se corresponden con las probabilidades de victoria local, empate o victoria visitante según se estima a partir de las cuotas.
+
+Ordena los resultados por Fecha, División y por orden alfabético del equipo local. Muestra las 10 primeras filas
+
+```{r }
+
+SP_2.3 <- SP_2.2 %>%
+  mutate(PH = 1 / PSCH_adj,
+         PD = 1 / PSCD_adj,
+         PA = 1 / PSCA_adj) %>%
+  arrange(Date, Div, HomeTeam) %>%
+  head(10)
+
+```
+
+## 2.4 Pivote o join **(1 Pts)**
+
+Ahora el desafío consiste en dividir el dataframe de partidos a equipos. Cada fila ahora se debe duplicar para mostrar la información desde la perspectiva del equipo local en una y desde el equipo visitante en la otra fila.
+
+Se eliminan las columnas HomeTeam y AwayTeam, sustituyéndose por una nueva llamada *HomeAway* y otra con los valores llamada *Equipo*. Coloca las nuevas columnas en la 3º y 4º posición.
+
+```{r }
+SP_2.4 <- SP_2.3 %>%
+  rename(HomeAway = HomeTeam) %>%
+  bind_rows(SP_2.3 %>%
+              rename(HomeAway = AwayTeam,
+                     Equipo = HomeTeam) %>%
+              select(3:4, 1:2, 5:10)) %>%
+  select(Date, Div, HomeAway, Equipo, PH, PD, PA, PSCH_adj, PSCD_adj, PSCA_adj, Ret, Fee) %>%
+  glimpse()
+
+```
+
+```{r}
+# ("SP_2.4.csv")
+```
+
+## 2.5 Métricas: puntos (Pts), puntos esperados (EPts) **(1 Pts)**
+
+Crea las siguientes variables:
+
+-   Puntos (Pts) 3 por cada victoria local y 1 por cada empate
+-   Puntos esperados (EPts). En este caso, no importa el resultado. Los puntos esperados se calculan multiplicando 3 por la probabilidad de victoria y sumando la probabilidad de empate. Si un equipo tiene una probabilidad de victoria del 50 % y su probabilidad de empate es 25 %, sus puntos esperados serían: 0.5x3 + 0.25 = 1.75
+
+```{r }
+SP_2.5 <- SP_2.4 %>%
+  mutate(Pts = case_when(
+    HomeAway == Equipo ~ ifelse(Ret == 1, 3, ifelse(Ret == 0, 1, 0)),
+    TRUE ~ ifelse(Ret == 0, 3, ifelse(Ret == 1, 1, 0))
+  ),
+  EPts = PH * 3 + PD) %>%
+  head()
+
+head(SP_2.5)
+
+```
+
+```{r}
+# ("SP_2.5.csv")
+```
+
+# 3. Football-data: Resumen y Visualización
+
+## 3.1 Tabla de clasificación por EPts **(0.5 Pts)**
+
+Implementa una función llamada `ranking_epts` que reciba 4 parámetros e imprima el ranking según los parámetros:
+
+-   "team.results": data frame con los resultados partido a partido de cada equipo
+-   "liga": cadena de texto "SP1" o "SP2"
+-   "orden.epts". Opcional, su valor por defecto es FALSE.
+-   "invertir.orden". Opcional, su valor por defecto es FALSE.
+
+La salida tiene que ser un dataframe con 4 columnas en este orden:
+
+-   Puesto: ranking o clasificación 1,2,3...
+-   Equipo
+-   Pts
+-   EPts
+
+La clasificación se ordena por Pts o por EPts, según el parámetro opcional "orden.epts" y el orden es de mayor a menor puntuación, excepto si el parámetro invertir.orden está a TRUE.
+
+```{r }
+ranking_epts <- function(team.results, liga, orden.epts = FALSE, invertir.orden = FALSE) {
+  df_liga <- team.results %>% filter(Div == liga)
+
+  df_liga <- df_liga %>%
+    group_by(Equipo) %>%
+    summarize(
+      Pts = sum(Pts),
+      EPts = sum(EPts)
+    )
+
+  orden_columna <- if (orden.epts) "EPts" else "Pts"
+
+  df_liga <- df_liga %>%
+    arrange(desc({{orden_columna}}))
+
+  if (invertir.orden) {
+    df_liga <- df_liga %>% arrange({{orden_columna}})
+  }
+
+  df_liga <- df_liga %>%
+    mutate(Puesto = row_number())
+
+  df_liga <- df_liga %>%
+    select(Puesto, Equipo, Pts, EPts)
+
+  print(df_liga)
+}
+```
+
+Test Función:
+
+```{r }
+ranking_epts(SP_2.5, "SP1", orden.epts = TRUE, invertir.orden = TRUE)
+ranking_epts(SP_2.5, "SP2")
+```
+
+## 3.2 Tabla de clasificación por Ratio Pts/EPts **(0.5 Pts)**
+
+Crea la variable R_Pts_EP e imprime la clasificación por ese criterio. Utiliza ambas ligas en conjunto
+
+-   Ratio Pts vs Epts (R_Pts_EP). Dividir los puntos conseguidos entre los esperados. Un valor por encima de 1 indica que el equipo lo ha hecho mejor de lo esperado y por debajo de 1 indica lo contrario.
+
+```{r }
+SP_2.5 %>%
+  group_by(Equipo) %>%
+  summarize(R_Pts_EP = sum(Pts) / sum(EPts)) %>%
+  arrange(desc(R_Pts_EP)) %>%
+  mutate(Puesto = row_number()) %>%
+  select(Puesto, everything())
+
+```
+
+## 3.3 Visualización **(0.8 Pts)**
+
+Realiza un diagrama de dispersión enfrentando el promedio de puntos Pts (y) vs Promedio de puntos esperados EPts (x). Usa un lienzo para cada gráfica, según su liga.
+
+-   Dibuja un diagrama de dispersión enfrentando Pts vs EPts en cada equipo.
+-   El color se mapea según si el ratio Pts/EPts es mayor que uno.
+-   Mapea el tamaño según el valor absoluto de diff_pts abs(Pts - Epts)
+-   Añade una línea recta con pendiente 1 y que pase por el origen.
+-   Crea facetas para representar cada liga en un lienzo diferente
+-   Usa text_repel para mostrar los nombres de los equipos
+
+```{r }
+install.packages("ggrepel")
+install.packages("dplyr")
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+
+####Me salta que `size` está deprecated y que use`linewidth` en su lugar.> 
+
+
+SP_2.5 %>%
+  group_by(Div, Equipo) %>%
+  summarise(
+    mean_pts = mean(Pts),
+    mean_epts = mean(EPts),
+    ratio = mean(Pts) / mean(EPts),
+    diff_pts = mean(abs(Pts - EPts)),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = mean_epts, y = mean_pts, size = abs(diff_pts), color = ratio > 1)) +
+  geom_point(alpha = 0.75) +
+  geom_abline(intercept = 0, slope = 1, color = "darkgreen", size = 1) +
+  geom_text_repel(aes(label = Equipo), size = 3, vjust = -1) +
+  facet_wrap(~ Div) +
+  theme_bw()
+
+```

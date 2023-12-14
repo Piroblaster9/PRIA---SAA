@@ -1,0 +1,452 @@
+---
+title: "Exámen práctico SAA Resuelto"
+author: "Juan Antonio Garcia Martinez"
+format: html
+editor: visual
+date: "2023-12-12"
+toc: true
+toc-depth: 2
+---
+
+# Instrucciones previas
+
+-   Completa la plantilla de código y sube el archivo .qmd a la actividad del examen del aula virtual.
+
+## Información del dataset y carga de datos `decathlon_df`:
+
+Este conjunto de datos contiene resultados reales de la prueba de atletismo decatlón masculino de 2012. **Solo se han tenido en cuenta marcas iguales o superiores a 6500 puntos**.
+
+En esta competición, los atletas realizan 10 pruebas de atletismo de pista (carreras y saltos) y campo (lanzamientos). La posición en cada prueba no es lo imporante para puntuar, sino la marca obtenida en cada una. Cada registro o marca tiene una puntuación asociada según unas tablas reglamentarias. En carreras, un tiempo inferior otorga mayor puntuación, mientras que en saltos y lanzamientos, la puntuación es mejor a mayor distancia.
+
+El análisis de datos en este deporte es fundamental para programar y optimizar los entrenenamientos de los atletas de élite, pues ciertos estudios demuestran que hay determinadas pruebas que tienen un peso mayor sobre la puntuación total.
+
+Normalmente, este tipo de competición se divide en dos días. Los eventos del primer día incluyen 100 metros, salto de longitud, lanzamiento de peso, salto de altura y 400 metros. Los eventos del segundo día incluyen 110 metros vallas, lanzamiento de disco, salto con pértiga, lanzamiento de jabalina y 1500 metros.
+
+Variables:
+
+-   Total: Puntuación total.
+
+-   Name: Nombre del atleta.
+
+-   Surname: Apellido del atleta.
+
+-   X100m: Marca en la prueba de velocidad 100m, en segundos.
+
+-   LJ: Marca en la prueba de salto de lonjitud, en metros.
+
+-   SP: Marca en la prueba de lanzamiento de peso, en metros.
+
+-   HJ: Marca en la prueba de salto de altura, en metros.
+
+-   X400m: Marca en la prueba de 400m lisos, en segundos.
+
+-   X110H: Marca en la prueba de 110m vallas, en segundos.
+
+-   DT: Marca en la prueba de lanzamiento de disco, en metros.
+
+-   PV: Marca en la prueba de salto con pértiga, en metros.
+
+-   JT: Marca en la prueba de lanzamiento de jabalina, en metros.
+
+-   X1500m: Marca en la prueba de medio fondo 1500m, en segundos
+
+-   First.day: Puntuación de las 5 primeras pruebas (Día 1)
+
+-   Second.day: Puntuación de las 5 pruebas siguentes (del Día 2)
+
+## Librerías:
+
+```{r warning=FALSE, message=FALSE}
+## Librerías
+library(tidyverse)
+if(!require("scar")) {
+  install.packages("scar")
+}
+library(scar)
+
+if(!require("corrplot")) {
+  install.packages("corrplot")
+}
+library(corrplot)
+if(!require("broom")) {
+  install.packages("broom")
+}
+library(broom)
+```
+
+## Carga de datos
+
+```{r}
+data("decathlon_raw")
+set.seed(133)
+decathlon_df <- decathlon_raw %>%
+  group_by(Name, Surname) %>%
+  slice_max(order_by = Total, n = 1) %>%
+  ungroup()
+```
+
+```{r}
+glimpse(decathlon_df)
+```
+
+# 1. Medidas de centralidad y dispersión (1 pts)
+
+Observa y compara las medidas de dispersión sobre los puntos conseguidos en el primer y segundo día. Completa los chunks para justificar tu respuesta.
+
+Indica:
+
+1.1 Desviación estándar de los puntos de cada día: (0.25 Pts)
+
+```{r}
+sd_primer_dia <- decathlon_df %>%
+  summarize(sd_primer_dia = sd(First.day))
+
+sd_segundo_dia <- decathlon_df %>%
+  summarize(sd_segundo_dia = sd(Second.day))
+
+cat("Desviación estándar del primer día:", sd_primer_dia$sd_primer_dia, "\n")
+cat("Desviación estándar del segundo día:", sd_segundo_dia$sd_segundo_dia, "\n")
+
+```
+
+1.2 Rango de los puntos de cada día: (0.25 Pts)
+
+```{r}
+rango_primer_dia <- decathlon_df %>%
+  summarize(rango_primer_dia = diff(range(First.day)))
+
+rango_segundo_dia <- decathlon_df %>%
+  summarize(rango_segundo_dia = diff(range(Second.day)))
+
+cat("Rango primer día:", rango_primer_dia$rango_primer_dia, "\n")
+cat("Rango segundo día:", rango_segundo_dia$rango_segundo_dia, "\n")
+
+```
+
+1.3 Media y mediana de los puntos de cada día: (0.25 Pts)
+
+```{r}
+media_primer_dia <- decathlon_df %>%
+  summarize(media_primer_dia = mean(First.day))
+
+mediana_primer_dia <- decathlon_df %>%
+  summarize(mediana_primer_dia = median(First.day))
+
+cat("Media del primer día:", media_primer_dia$media_primer_dia, "\n")
+cat("Mediana del primer día:", mediana_primer_dia$mediana_primer_dia, "\n")
+```
+
+```{r}
+media_segundo_dia <- decathlon_df %>%
+  summarize(media_segundo_dia = mean(Second.day))
+
+mediana_segundo_dia <- decathlon_df %>%
+  summarize(mediana_segundo_dia = median(Second.day))
+
+cat("Media del segundo día:", media_segundo_dia$media_segundo_dia, "\n")
+cat("Mediana del segundo día:", mediana_segundo_dia$mediana_segundo_dia, "\n")
+```
+
+1.4 Nombre y apellido más común y su frecuencia de aparición (si hubiera varios, indicar todos): (0.25 Pts)
+
+```{r}
+nombre_mas_comun <- decathlon_df %>%
+  count(Name) %>%
+  slice_max(order_by = n, n = 1)
+
+apellido_mas_comun <- decathlon_df %>%
+  count(Surname) %>%
+  slice_max(order_by = n, n = 1)
+  
+cat("Nombre más común:", nombre_mas_comun$Name, "\n")
+cat("Frecuencia nombre más común:", nombre_mas_comun$n, "\n")
+
+cat("Apellido más común:", apellido_mas_comun$Surname, "\n")
+cat("Frecuencia apellido más común:", apellido_mas_comun$n, "\n")
+
+  
+```
+
+# 2. Distribución y posición de los datos (1,5 pts)
+
+2.1 (0,25 Pts) Observa la distribución de los datos de las marcas de las 10 pruebas:
+
+```{r}
+decathlon_df %>%
+  select_if(is.double) %>%
+  pivot_longer(cols = everything(), names_to = "Prueba", values_to = "marca") %>%
+  ggplot(aes(x = marca)) +
+    geom_histogram(bins = 10)+
+    labs(
+      title = "Distribución Marcas",
+      x = "marca"
+    ) +
+  facet_wrap(~ Prueba, scales = "free")+
+    theme_bw()
+```
+
+¿Son las marcas de los atletas distribuciones simétricas y que tienden a una normal aproximadamente?
+
+**SI**
+
+2.2 (0,25 Pts) Dibuja el histograma de los puntos totales con ggplot. Para obtener el número de *bins*, utiliza la fórmula de Sturges:
+
+$$k = 1 + \log_2(N)$$ siendo k el nº de barras del histograma (bins) y N el tamaño de la muestra
+
+```{r}
+# Fórmula de Sturges
+nbins <- round(1 + log2(nrow(decathlon_df)))
+```
+
+```{r}
+decathlon_df %>%
+  ggplot(aes(x = Total)) +
+    geom_histogram(bins = nbins, fill = "skyblue", color = "black", alpha = 0.7) +
+    labs(
+      title = "Histograma Puntos Totales",
+      x = "Puntos Totales",
+      y = "Frecuencia"
+    ) +
+    theme_bw()
+```
+
+Según el histograma, ¿Es simétrica la distribución de los puntos totales? ¿A qué se debe? Justifica tu respuesta. Pista: vuelve a leer el primer párrafo de la información del dataset.
+
+**NO ES SIMÉTRICA PORQUE SOLO TOMA LOS DATOS DE 6500 PUNTOS EN ADELANTE**
+
+2.3 (0.5 Pts) La siguiente gráfica, muestra los diagramas de caja y bigote para cada una de las pruebas. Los registros han sido estandarizados por z-score. A partir de la gráfica, indica para el atleta Aston Eaton (nº 1 en el ranking 2012) y para todas las pruebas si su marca fue un valor atípico y si en caso afirmativo, indica si además, fue la mejor respecto a sus rivales. ¿En qué prueba obtuvo peor rendimiento relativo a sus rivales?
+
+```{r}
+decathlon_df %>%
+  mutate_if(is.double, scale) %>%
+  select(-First.day, -Second.day) %>%
+  mutate(Eaton = Total > 9000) %>%
+  pivot_longer(cols = c(-Total, -Name, -Surname, -Eaton), names_to = "Prueba", values_to = "marca_zscore") %>%
+  ggplot(aes(x = Prueba, y = marca_zscore, color = Eaton)) +
+    geom_boxplot() +
+    labs(
+      title = "Marcas",
+      x = "Prueba",
+      y = "marca_zscore"
+    ) +
+    theme_bw()
+
+
+```
+
+-   X100m: Atipico
+
+-   LJ: Atipico
+
+-   SP: Tipico
+
+-   HJ: Atipico
+
+-   X400m: Es la mejor (Atipico)
+
+-   X110H: Atipico
+
+-   DT: Tipico
+
+-   PV: Tipico
+
+-   JT: Tipico
+
+-   X1500m: Es la mejor (Atipico)
+
+-   Peor especialidad de las 10 en términos relativos a los otros atletas:
+
+2.4 (0.5 Pts) Transforma las 4 variables que están expresadas en tiempo a velocidad en metros/segundo, teniendo en cuenta los metros de cada prueba. Repite la visualización anterior con las modificaciones hechas. ¿Qué ocurrió?
+
+```{r}
+decathlon_df %>%
+  mutate(      ) %>% #convierte los tiempos en velocidad
+  mutate_if(is.double, scale) %>% # aplica zscore
+  select(-First.day, -Second.day) %>%
+  mutate(Eaton = Total > 9000) %>%
+  pivot_longer(cols = c(-Total, -Name, -Surname, -Eaton), names_to = "Prueba", values_to = "marca_zscore") %>%
+  ggplot(aes(x = Prueba, y = marca_zscore, color = Eaton)) +
+    geom_boxplot() +
+    labs(
+      title = "Marcas",
+      x = "Prueba",
+      y = "marca_zscore"
+    ) +
+    theme_bw()
+
+###################################
+
+#Lo que ocurre es que se invierte la posición de los datos de la tabla
+decathlon_df %>%
+  mutate(X100m = 100 / X100m,        
+         X400m = 400 / X400m,        
+         X110H = 110 / X110H,        
+         X1500m = 1500 / X1500m) %>% 
+  mutate_if(is.double, scale) %>%
+  select(-First.day, -Second.day) %>%
+  mutate(Eaton = Total > 9000) %>%
+  pivot_longer(cols = c(-Total, -Name, -Surname, -Eaton), names_to = "Prueba", values_to = "marca_zscore") %>%
+  ggplot(aes(x = Prueba, y = marca_zscore, color = Eaton)) +
+    geom_boxplot() +
+    labs(
+      title = "Marcas",
+      x = "Prueba",
+      y = "marca_zscore"
+    ) +
+    theme_bw()
+
+```
+
+# 3. Relación entre variables, correlación y regresión lineal simple. (2 Pts)
+
+3.1 (0,5 Pts) Grafica la matriz de correlación de las 10 pruebas. Explica las correlaciones más fuertes y trata de justificar su lógica de aquellas positivas que superan 0.60 y la más fuerte de todas las negativas. Utiliza el método *number* para ver los resultados con mayor precisión.
+
+```{r}
+cor_matrix <- decathlon_df %>%
+  select(starts_with("X")) %>%
+  cor(method = "pearson")
+
+corrplot::corrplot(cor_matrix, method = "number", type = "upper", tl.cex = 0.8)
+
+```
+
+3.2 (1 Pts) Basándote en las pruebas del día 1 y en la matriz de correlación, elige la que crees que puede ser la mejor variable predictora para estimar las marcas de 4 de las pruebas del día 2 con un modelo de regresión lineal simple. Utiliza el dataframe normalizado y con las marcas de tiempo pasadas a velocidad. `decathlon_scaled`
+
+-   X110H en función de ...
+
+-   DT en función de ...
+
+-   JT en función de ...
+
+-   x1500m en función de ...
+
+```{r}
+decathlon_scaled <- decathlon_df %>%
+  mutate(X100m = 100/X100m, X110H = 110/X110H,
+         X1500m = 1500/X1500m, X400m = 400/X400m) %>%
+  mutate_if(is.double, scale) 
+```
+
+```{r}
+# Modelando los resultados de 110m vallas en función de ... (prueba del día 1)
+lm_X110H <- lm(Second.day ~ X110H, data = decathlon_scaled)
+```
+
+```{r}
+# Modelando los resultados de lanz. disco en función de ... (prueba del día 1)
+lm_DT <- lm(Second.day ~ DT, data = decathlon_scaled)
+```
+
+```{r}
+# Modelando los resultados de lanz. jabalina en función de ... (prueba del día 1)
+lm_JT <- lm(Second.day ~ JT, data = decathlon_scaled)
+```
+
+```{r}
+# Modelando los resultados de 1500m  en función de ... (prueba del día 1)
+lm_x1500m <- lm(Second.day ~ X1500m, data = decathlon_scaled)
+```
+
+3.3 (0,5 Pts) ¿Qué modelo explica mejor la varianza de los datos? Observa el coeficiente de determinación del modelo y justifica tu respuesta.
+
+**EL DE JABALINA. ES EL QUE TIENE EL COEFICIENTE MÁS ALTO.**
+
+# 4. Variable aleatoria y distribuciones de probabilidad (1,50 Pts)
+
+Eres responsable de un videojuego de simulación atletismo que está en fase de desarrollo. Te toca trabajar en la prueba de salto de longitud. En esa prueba, cada atleta realiza una carrera de aceleración previa al salto, tomando una distancia que cada atleta elige y fija para llegar sin pasarse a la línea de salto (tabla).
+
+La distancia de la carrera del atleta previa al salto es variable aleatoria. En el momento del salto, la distancia restante de la zapatilla del atleta al límite reglamentario debe ser positiva o cero (ajuste perfecto), si es negativa, significa que el atleta se ha pasado y el salto se considera como nulo.
+
+![Descripción de la imagen](https://phantom-marca.unidadeditorial.es/642e1b55c5bda5407af6e9464c4f4d02/resize/990/f/webp/assets/multimedia/imagenes/2022/03/18/16476272790902.jpg)
+
+4.1 (0,25 Pts) Si el ajuste de talonamiento inicial sigue una distribución normal, con media 5 cm (margen de seguridad) y desviación estándar de 5 cm. ¿Cuál es la probabilidad de que el salto resulte nulo, rebasando la tabla? En esa situación, la distancia de la punta del pie a la tabla sería negativa.
+
+```{r}
+media <- 5
+desviacion_estandar <- 5
+
+probabilidad_nulo <- pnorm(0, mean = media, sd = desviacion_estandar)
+
+cat("La prob de pisar la linea :", probabilidad_nulo, "\n")
+
+```
+
+4.2 (0,25 Pts) Supongamos que el primer salto es bueno y el jugador, decide arriesgar y adelantar la carrera 7,5 cm para ajustar al máximo en los **dos** intentos restantes. Realiza dos simulaciones de saltos usando -2,5 cm como media y 5 cm de desviación estándar. Utiliza la semilla '13' para reproductividad.
+
+```{r}
+# Semilla 
+set.seed(13)
+
+media_simulacion <- -2.5
+desviacion_estandar_simulacion <- 5
+
+dos_saltos <- rnorm(2, mean = media_simulacion, sd = desviacion_estandar_simulacion)
+
+cat("Simulación primer salto:", dos_saltos[1], "cm\n")
+cat("Simulación segundo salto:", dos_saltos[2], "cm\n")
+
+```
+
+¿Qué precisión se consiguió en el cada uno de los intentos? ¿Alguno resultó nulo? ¿Cuál?
+
+**En el primer salto 0.2716347 cm y en el segundo -3.90136. El segundo fue nulo.**
+
+4.3 (0,25) Calcula la probabilidad de resultado nulo en cada salto tras el ajuste anterior y guárdalo en la variable p.
+
+```{r}
+media_simulacion <- -2.5
+desviacion_estandar_simulacion <- 5
+
+# Probabilidad de salto nulo (distancia negativa) en cada salto:
+p <- pnorm(0, mean = media_simulacion, sd = desviacion_estandar_simulacion)
+
+cat("Prob de nulo en el primer salto:", p[1], "\n")
+cat("Prob de nulo en el segundo salto:", p[2], "\n")
+
+```
+
+4.4 (0.25 Pts) Usando p, calcula de forma manual (usando aritmética) la probabilidad de obtener, al menos, un salto válido en los dos intentos restantes, suponiendo que los sucesos son independientes.
+
+```{r}
+# Cálculo de la probabilidad de, al menos un salto válido
+prob_al_menos_un_valido <- 1 - p[1]
+
+cat("Prob de al menos un salto válido:", prob_al_menos_un_valido, "\n")
+
+
+
+```
+
+4.5 (0.25 Pts) Realiza el mismo cálculo usando la distribución binomial a partir del valor de p y dos intentos. Considera éxito como salto válido y su probabilidad es 1-p. Deberías llegar al mismo resultado que en ejercicio anterior.
+
+```{r}
+# Cálculo usando funciones de la distribución binomial
+prob_exito <- 1 - p[1]
+
+num_intentos <- 2
+
+prob_binomial <- 1 - pbinom(0, size = num_intentos, prob = prob_exito)
+
+cat("Prob de al menos un salto válido:", prob_binomial, "\n")
+
+```
+
+4.6 (0.25 Pts) La computadora simula tres saltos para cada uno de los otros 11 atletas usando la distribución binomial, con probabilidad de salto válido 1-p. Usa la semilla '14'. ¿Algún atleta obtuvo 3 nulos y se quedó sin puntuar? ¿Cuál?
+
+```{r}
+# Semilla
+
+set.seed(14)
+# simulación de 3 saltos por cada uno de los 11 atletas, con probabilidad de salto válido 1-p.
+
+num_atletas <- 11
+num_saltos <- 3
+prob_exito <- 1 - p[1]
+
+resultados_simulados <- matrix(rbinom(num_atletas * num_saltos, size = 1, prob = prob_exito), nrow = num_atletas)
+
+atletas_sin_puntuar <- which(rowSums(resultados_simulados) == 0)
+
+cat("Atletas con 3 nulos y que se quedaron sin puntuar:", atletas_sin_puntuar, "\n")
+
+```
